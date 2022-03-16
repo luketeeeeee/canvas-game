@@ -123,7 +123,7 @@ function spawnEnemies() {
 function animateElementsOnTheScreen() {
   animationId = requestAnimationFrame(animateElementsOnTheScreen);
 
-  canvasContext.fillStyle = '#1a1721'
+  canvasContext.fillStyle = 'rgba(0, 0, 0, 0.15)'
 
   canvasContext.fillRect(0, 0, canvas.width, canvas.height);
   drawPlayerOnTheScreen();
