@@ -4,79 +4,37 @@ const canvasContext = canvas.getContext('2d');
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
+const scoreElement = document.querySelector('#scoreElement');
+const startGameButton = document.querySelector('#startGameButton');
+const modalElement = document.querySelector('#modalElement');
+const gameOverScreenScore = document.querySelector('#gameOverScreenScore');
+
 const xCenterCoordinate = canvas.width / 2;
 const yCenterCoordinate = canvas.height / 2;
 
-class Player {
-  constructor(x, y, radius, color) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
-  }
-
-  draw() {
-    canvasContext.beginPath();
-    canvasContext.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    canvasContext.fillStyle = this.color;
-    canvasContext.fill();
-  }
-}
-
-class Projectile {
-  constructor(x, y, radius, color, velocity) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
-    this.velocity = velocity;
-  }
-
-  draw() {
-    canvasContext.beginPath();
-    canvasContext.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    canvasContext.fillStyle = this.color;
-    canvasContext.fill();
-  }
-
-  update() {
-    this.draw();
-    this.x = this.x + this.velocity.x;
-    this.y = this.y + this.velocity.y;
-  }
-}
-
-class Enemy {
-  constructor(x, y, radius, color, velocity) {
-    this.x = x;
-    this.y = y;
-    this.radius = radius;
-    this.color = color;
-    this.velocity = velocity;
-  }
-
-  draw() {
-    canvasContext.beginPath();
-    canvasContext.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-    canvasContext.fillStyle = this.color;
-    canvasContext.fill();
-  }
-
-  update() {
-    this.draw();
-    this.x = this.x + this.velocity.x;
-    this.y = this.y + this.velocity.y;
-  }
-}
+const frictionValue = 0.98;
 
 let animationId;
+let score = 0;
 
 const playerXCoordinate = xCenterCoordinate;
 const playerYCoordinate = yCenterCoordinate;
-const player = new Player(playerXCoordinate, playerYCoordinate, 30, "blue");
 
-const projectilesArray = [];
-const enemiesArray = [];
+let player = new Player(playerXCoordinate, playerYCoordinate, 20, "white");
+let projectilesArray = [];
+let enemiesArray = [];
+let particlesArray = [];
+
+function init() {
+  player = new Player(playerXCoordinate, playerYCoordinate, 20, "white");
+  projectilesArray = [];
+  enemiesArray = [];
+  particlesArray = [];
+
+  score = 0;
+  scoreElement.innerHTML = score;
+  gameOverScreenScore.innerHTML = score;
+}
 
 function drawPlayerOnTheScreen() {
   player.draw();
@@ -84,7 +42,7 @@ function drawPlayerOnTheScreen() {
 
 function spawnEnemies() {
   setInterval(() => {
-    const enemyRadius = Math.random() * (25 - 10) + 10;
+    const enemyRadius = Math.random() * (30 - 10) + 10;
     let xEnemyCoordinate;
     let yEnemyCoordinate;
 
@@ -98,7 +56,7 @@ function spawnEnemies() {
         0 - enemyRadius : canvas.height + enemyRadius;
     }
 
-    const enemyColor = 'green';
+    const enemyColor = `hsl(${Math.random() * 360}, 50%, 50%)`;
 
     const mousePositionGeneratedAngle = Math.atan2(
       yCenterCoordinate - yEnemyCoordinate,
@@ -106,8 +64,8 @@ function spawnEnemies() {
     );
 
     const enemyVelocityAndDirection = {
-      x: Math.cos(mousePositionGeneratedAngle),
-      y: Math.sin(mousePositionGeneratedAngle)
+      x: Math.cos(mousePositionGeneratedAngle) * 1.25,
+      y: Math.sin(mousePositionGeneratedAngle) * 1.25
     }
 
     enemiesArray.push(new Enemy(
@@ -117,7 +75,7 @@ function spawnEnemies() {
       enemyColor,
       enemyVelocityAndDirection
     ))
-  }, 1000);
+  }, 700);
 }
 
 function animateElementsOnTheScreen() {
@@ -127,6 +85,14 @@ function animateElementsOnTheScreen() {
 
   canvasContext.fillRect(0, 0, canvas.width, canvas.height);
   drawPlayerOnTheScreen();
+
+  particlesArray.forEach((particle, particleIndex) => {
+    if (particle.alpha <= 0) {
+      particlesArray.splice(particleIndex, 1);
+    } else {
+      particle.update();
+    }
+  })
 
   projectilesArray.forEach((projectile, projectileIndex) => {
     projectile.update();
@@ -145,41 +111,79 @@ function animateElementsOnTheScreen() {
 
     if (distanceBetweenEnemyAndPlayer - enemy.radius - player.radius < 1) {
       cancelAnimationFrame(animationId);
+
+      modalElement.style.display = 'flex';
+      gameOverScreenScore.innerHTML = score;
     }
 
     projectilesArray.forEach((projectile, projectileIndex) => {
       const distanceBetweenEnemyAndProjectile = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y)
 
       if (distanceBetweenEnemyAndProjectile - enemy.radius - projectile.radius < 1) {
-        setTimeout(() => {
-          enemiesArray.splice(enemyIndex, 1);
-          projectilesArray.splice(projectileIndex, 1);
-        }, 0);
+        for (let i = 0; i < enemy.radius * 2; i++) {
+          particlesArray.push(
+            new Particle(
+              projectile.x,
+              projectile.y,
+              Math.random() * 2,
+              enemy.color,
+              {
+                x: (Math.random() - 0.5) * (Math.random() * 5),
+                y: (Math.random() - 0.5) * (Math.random() * 5)
+              }
+            )
+          )
+        }
+
+        if (enemy.radius - 10 > 5) {
+          score += 100;
+          scoreElement.innerHTML = score;
+
+          gsap.to(enemy, {
+            radius: enemy.radius - 10
+          })
+
+          setTimeout(() => {
+            projectilesArray.splice(projectileIndex, 1);
+          }, 0);
+        } else {
+          score += 250;
+          scoreElement.innerHTML = score;
+
+          setTimeout(() => {
+            enemiesArray.splice(enemyIndex, 1);
+            projectilesArray.splice(projectileIndex, 1);
+          }, 0);
+        }
       }
     })
   })
 }
 
 addEventListener('click', (event) => {
-  console.log(projectilesArray);
-
   const mousePositionGeneratedAngle = Math.atan2(
     event.clientY - yCenterCoordinate,
     event.clientX - xCenterCoordinate
   );
 
   const projectileVelocityAndDirection = {
-    x: Math.cos(mousePositionGeneratedAngle) * 2,
-    y: Math.sin(mousePositionGeneratedAngle) * 2
+    x: Math.cos(mousePositionGeneratedAngle) * 5,
+    y: Math.sin(mousePositionGeneratedAngle) * 5
   }
 
   projectilesArray.push(new Projectile(
     xCenterCoordinate,
     yCenterCoordinate,
     5,
-    'red',
+    'white',
     projectileVelocityAndDirection))
 })
 
-spawnEnemies();
-animateElementsOnTheScreen();
+startGameButton.addEventListener('click', () => {
+  init();
+
+  animateElementsOnTheScreen();
+  spawnEnemies();
+
+  modalElement.style.display = 'none';
+})
