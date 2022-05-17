@@ -15,7 +15,8 @@ A principal razão para a realização desse projeto foi basicamente a diferenç
 - ```Tailwind CSS``` ⭢ é um framework de CSS que foi utilizado nesse projeto para não ser necessário a criação de arquivos .css.
 
 ## 💡 O que aprendi:
-
+- O principal aprendizado que eu consegui tirar desse projeto foi a utilização da tag ```canva``` e as diversas possibilidades de usá-la, juntamente com o JavaScript, para produzir movimento em tela.
+- Também aprimorei os meus conhecimentos, tanto teóricos quanto práticos, em relação à programação orientada à objetos.
 
 ## 🕹️ Funcionamento do jogo:
 
