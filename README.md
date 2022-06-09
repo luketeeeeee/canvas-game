@@ -20,3 +20,4 @@ A principal razão para a realização desse projeto foi basicamente a diferenç
 
 ## 🕹️ Funcionamento do jogo:
 
+O jogo consiste de um jogador e diversos inimigos que surgem nas bordas da tela em posições aleatórias. O jogador consegue atirar nos inimigos, e a cada acerto pontos são ganhos, quanto maior o inimigo mais pontos são ganhos, porém, mais disparos são necessários para que seja completamente destruído
